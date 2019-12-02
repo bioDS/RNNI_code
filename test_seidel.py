@@ -16,7 +16,7 @@ def check_seidel(n):
         uRNNI = uRNNI_graph_on_n_taxa(n)
         print("Done generating uRNNI graph on %s taxa on %s at %s" % (n, time.strftime("%a, %b %d %Y"), time.strftime("%H:%M:%S")))
 
-    fw_distance = uRNNI[0].Seidel()
+    fw_distance = uRNNI[0].Floyd_Warshall()
     seidel_distance = uRNNI[0].Seidel()
 
     print(np.array_equal(fw_distance[0], seidel_distance[0]))
