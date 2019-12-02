@@ -1,4 +1,4 @@
-__author__ = 'Lena Collienne'
+__author__ = 'Lena Collienne, Kieran Elmes'
 
 #checks whether the cluster thm holds
 #only works in reasonable time for up to 6 taxa
@@ -7,6 +7,9 @@ __author__ = 'Lena Collienne'
 from uRNNI_graph import *
 from os.path import exists
 import math
+
+import cProfile
+import re
 
 
 def get_cluster_subset(C, uRNNI):
@@ -39,6 +42,10 @@ def check_cluster_thm(n):
     C.add(1)
     #only check clusters {1,...,m} for 2 <= m <= floor(n/2); all others follow from symmetry of RNNI
     m = int(math.floor(n/2)) + 1
+    uRNNI_distance = uRNNI[0].Floyd_Warshall()
+    uRNNI_adjacency_list = uRNNI[0].adjacency_list()
+    pairs_checked = 0
+    neighbours_checked = 0
     for i in range(2,m):
         C.add(i)
         print(C)
@@ -50,34 +57,33 @@ def check_cluster_thm(n):
         distance_cluster = cluster_graph.Floyd_Warshall() #FW does not work for more than 6 taxa
         print("Done generating cluster graph distance matrix on %s taxa on %s at %s" % (n, time.strftime("%a, %b %d %Y"), time.strftime("%H:%M:%S")))
         print("Start comparing cluster %s on %s taxa on %s at %s" % (C, n, time.strftime("%a, %b %d %Y"), time.strftime("%H:%M:%S")))
-        uRNNI_distance = np.array(np.zeros((len(cluster_subset),len(cluster_subset)))) #exact RNNI distances between trees with shared cluster
-        Q = list()
-        for k in cluster_subset:
-            for j in cluster_subset:
-                Q.append([k,j])
-        count = 0
-        max_count = len(Q)
-        h = 0
-        while len(Q)>0:
-            if(1-len(Q)/max_count > h):
-                print ('Progress cluster ', C, ': ', 100*h, '% at', time.strftime("%a, %b %d %Y"), time.strftime("%H:%M:%S"))
-                h += 0.01
-            pair = Q.pop()
-            l = pair[0]
-            D = uRNNI[0].Dijkstra(l)[0] #dict: tree numbers as keys, distance to tree i as values
-            for k in D:
-                if [k,l] in Q:
-                    Q.remove([k,l])
-                    Q.remove([l,k])
-                    uRNNI_distance[cluster_subset.index(l)][cluster_subset.index(k)] = D[k]
-                    uRNNI_distance[cluster_subset.index(k)][cluster_subset.index(l)] = D[k]
 
         for k in cluster_subset:
             for j in cluster_subset:
-                if uRNNI_distance[cluster_subset.index(k)][cluster_subset.index(j)] != distance_cluster[0][distance_cluster[1][k]][distance_cluster[1][j]]:
-                    print(uRNNI[1][cluster_subset.index(k)], uRNNI[1][cluster_subset.index(j)])
+                pairs_checked += 1
+                subset_distance = distance_cluster[0][distance_cluster[1][k]][distance_cluster[1][j]]
+                graph_distance = uRNNI_distance[0][uRNNI_distance[1][(k)]][uRNNI_distance[1][(j)]]
+                if graph_distance != subset_distance:
+                    print("graph distance: ", graph_distance, " != subset_distance: ", subset_distance)
+                    print(uRNNI[1][(k)], uRNNI[1][(j)])
                     return False
+
+                for l in uRNNI_adjacency_list[j]:
+                    l = int(l)
+                    if l not in cluster_subset:
+                        neighbours_checked += 1
+                        uRNNI_distance[1][l]
+                        uRNNI_distance[1][(k)]
+                        l_distance = uRNNI_distance[0][uRNNI_distance[1][l]][uRNNI_distance[1][(k)]]
+                        j_distance = distance_cluster[0][distance_cluster[1][j]][distance_cluster[1][k]]
+                        if l_distance < j_distance:
+                            print("l_distance", l_distance)
+                            print("j_distance", j_distance)
+                            print("l: ", uRNNI[1][l], "is closer than j: ", uRNNI[1][(j)], " to k: ", uRNNI[1][(k)])
+                            return False
+
         print("Done comparing cluster %s on %s taxa on %s at %s" % (C, n, time.strftime("%a, %b %d %Y"), time.strftime("%H:%M:%S")))
+        print("Checked a total of ", pairs_checked, "pairs, and ", neighbours_checked, "neighbours")
     return True
 
 
@@ -89,4 +95,5 @@ def main():
         print("Cluster Theorem does NOT hold for %s taxa" %n)
 
 if __name__ == "__main__":
+    #cProfile.run('main()')
     main()
