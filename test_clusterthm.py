@@ -42,7 +42,7 @@ def check_cluster_thm(n):
     C.add(1)
     #only check clusters {1,...,m} for 2 <= m <= floor(n/2); all others follow from symmetry of RNNI
     m = int(math.floor(n/2)) + 1
-    uRNNI_distance = uRNNI[0].Floyd_Warshall()
+    uRNNI_distance = uRNNI[0].Seidel()
     uRNNI_adjacency_list = uRNNI[0].adjacency_list()
     pairs_checked = 0
     neighbours_checked = 0
@@ -54,7 +54,7 @@ def check_cluster_thm(n):
         # Compute the subgraph of uRNNI only containing trees with cluster C + compute all distances within this graph
         print("Start generating cluster graph distance matrix on %s taxa on %s at %s" % (n, time.strftime("%a, %b %d %Y"), time.strftime("%H:%M:%S")))
         cluster_graph = uRNNI[0].subgraph(cluster_subset)
-        distance_cluster = cluster_graph.Floyd_Warshall() #FW does not work for more than 6 taxa
+        distance_cluster = cluster_graph.Seidel() #FW does not work for more than 6 taxa
         print("Done generating cluster graph distance matrix on %s taxa on %s at %s" % (n, time.strftime("%a, %b %d %Y"), time.strftime("%H:%M:%S")))
         print("Start comparing cluster %s on %s taxa on %s at %s" % (C, n, time.strftime("%a, %b %d %Y"), time.strftime("%H:%M:%S")))
 
