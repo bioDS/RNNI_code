@@ -1,4 +1,4 @@
-__author__ = '@gavruskin, Lena Collienne'
+__author__ = '@gavruskin, Lena Collienne, Kieran Elmes'
 
 from collections import deque
 import time
@@ -6,20 +6,25 @@ import numpy as np
 
 # Graph methods.
 
-def Seidel_recursive(A):
+def Seidel_recursive(A, count):
+    print("Going down: {} at {}".format(count, time.strftime("%D %H:%M:%S")))
     n = np.shape(A)[0]
     if all(A[i][j] for i in range(n) for j in range(n) if i != j):
         return A
+    print("starting dot")
     Z = np.dot(A, A)
+    print("done dot, starting B")
     B = np.array([
         [1 if i != j and (A[i][j] == 1 or Z[i][j] > 0) else 0 for j in range(n)]
     for i in range(n)])
-    T = Seidel_recursive(B)
+    print("done B")
+    T = Seidel_recursive(B, count + 1)
     X = np.dot(T,A)
     degree = [sum(A[i][j] for j in range(n)) for i in range(n)]
     D = np.array([
         [2 * T[i][j] if X[i][j] >= T[i][j] * degree[j] else 2 * T[i][j] - 1 for j in range(n)]
     for i in range(n)])
+    print("Coming up: {} at {}".format(count, time.strftime("%D %H:%M:%S")))
     return D
 
 class Graph(object):
@@ -181,7 +186,7 @@ class Graph(object):
             adjacency[index[i]][index[i]] = 0
 
         # Find all-pairs distance
-        A = Seidel_recursive(adjacency)
+        A = Seidel_recursive(adjacency, 0)
         return A, index
 
 
