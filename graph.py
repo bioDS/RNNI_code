@@ -1,30 +1,41 @@
 __author__ = '@gavruskin, Lena Collienne, Kieran Elmes'
 
 from collections import deque
+from numpy.ctypeslib import ndpointer
 import time
 import numpy as np
+import ctypes
+
+_seidel = ctypes.CDLL("./libseidel.so")
+_seidel.test_function.argtypes = (ndpointer(ctypes.c_int, flags="C_CONTIGUOUS"), ctypes.c_int32)
+_seidel.seidel.argtypes = (ndpointer(ctypes.c_int, flags="C_CONTIGUOUS"), ctypes.c_int32)
+_seidel.seidel_recursive.argtypes = (ndpointer(ctypes.c_int, flags="C_CONTIGUOUS"), ctypes.c_int32, ctypes.c_int32)
 
 # Graph methods.
 
 def Seidel_recursive(A, count):
-    print("Going down: {} at {}".format(count, time.strftime("%D %H:%M:%S")))
+    #print("Going down: {} at {}".format(count, time.strftime("%D %H:%M:%S")))
+    #print(A)
     n = np.shape(A)[0]
     if all(A[i][j] for i in range(n) for j in range(n) if i != j):
         return A
-    print("starting dot")
+    #print("starting dot")
     Z = np.dot(A, A)
-    print("done dot, starting B")
+    #print(Z)
+    #print("done dot, starting B")
     B = np.array([
         [1 if i != j and (A[i][j] == 1 or Z[i][j] > 0) else 0 for j in range(n)]
     for i in range(n)])
-    print("done B")
+    #print(B)
+    #print("done B")
     T = Seidel_recursive(B, count + 1)
     X = np.dot(T,A)
     degree = [sum(A[i][j] for j in range(n)) for i in range(n)]
     D = np.array([
         [2 * T[i][j] if X[i][j] >= T[i][j] * degree[j] else 2 * T[i][j] - 1 for j in range(n)]
     for i in range(n)])
-    print("Coming up: {} at {}".format(count, time.strftime("%D %H:%M:%S")))
+    #print(D)
+    #print("Coming up: {} at {}".format(count, time.strftime("%D %H:%M:%S")))
     return D
 
 class Graph(object):
@@ -183,43 +194,17 @@ class Graph(object):
             adjacency[b][a] = 1
         for i in self.vertices:
             adjacency[index[i]][index[i]] = 0
-        return adjacency
+        return adjacency, index
 
 
     def Seidel(self):
-        # Convert the graph into a numpy adjacency matrix
-        n = len(self.vertices)
-        m = len(self.edges)
-        index = dict() #Save the vertices in a dictionary where they are assigned their positions in the distance matrix (needed if vertices don't have names 1,..,n)
-        counter = 0
-
-        adjacency = np.zeros((n,n), dtype=bool)
-        for i in self.edges:
-            edge = i.replace('(','').replace(')','').split(',') #edges are saved as strings > convert them to list of integers
-            edge[0] = int(edge[0])
-            edge[1] = int(edge[1])
-
-            # a = index of edge[0]
-            if edge[0] in index:
-                a = index[edge[0]]
-            else:
-                index[edge[0]] = counter
-                a = counter
-                counter = counter + 1
-            # b = index of edge[0]
-            if edge[1] in index:
-                b = index[edge[1]]
-            else:
-                index[edge[1]] = counter
-                b = counter
-                counter = counter + 1
-            adjacency[a][b] = 1 #Can/Should we reduce the distance matrix to its half?
-            adjacency[b][a] = 1
-        for i in self.vertices:
-            adjacency[index[i]][index[i]] = 0
+        adj_ind = self.get_adjacency()
+        A = np.ascontiguousarray(adj_ind[0], dtype=np.int32)
+        index = adj_ind[1]
+        _seidel.seidel(A, A.shape[0])
 
         # Find all-pairs distance
-        A = Seidel_recursive(adjacency, 0)
+        #D = Seidel_recursive(A, 0)
         return A, index
 
 
