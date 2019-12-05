@@ -68,9 +68,9 @@ void seidel_recursive(short *Dest, dm A, int n, int depth) {
 	B.sa = malloc(2*n*n*sizeof(short));
 	B.sat = malloc(2*n*n*sizeof(short)); //not used
 	short *degree = malloc(n*sizeof(short));
-	#pragma omp parallel for
 	for (int i = 0; i < n; i++) {
 		degree[i] = 0;
+		#pragma omp parallel for
 		for (int j = 0; j < n; j++) {
 			degree[i] += A.sa[i*n+j];
 			if (i == j) {
@@ -109,8 +109,8 @@ void seidel_recursive(short *Dest, dm A, int n, int depth) {
 	}
 
 	dm D = B;
-	#pragma omp parallel for
 	for (int i = 0; i < n; i++) {
+		#pragma omp parallel for
 		for (int j = 0; j < n; j++) {
 			// find vector product of A_{i}, and B_{,j}
 			short prod = 0;
