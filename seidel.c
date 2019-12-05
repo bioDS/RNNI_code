@@ -5,8 +5,8 @@
 #include <omp.h>
 
 typedef struct dual_mat {
-	short *sa;
-	short *sat;
+	int *sa;
+	int *sat;
 } dm;
 
 void print(dm X, int n) {
@@ -22,7 +22,8 @@ void print(dm X, int n) {
  * Allocates a new matrix for returning D.
  * Z doesn't need to be allocated, maybe X does?
  */
-void seidel_recursive(short *Dest, dm A, int n, int depth) {
+void seidel_recursive(int *Dest, dm A, int n, int depth) {
+	size_t matrix_size = (size_t)n * (size_t)n * sizeof(int);
 	const int verbose = 0;
 	printf("recursion\n");
 	// test the base case
@@ -42,16 +43,16 @@ void seidel_recursive(short *Dest, dm A, int n, int depth) {
 	// the array is all ones. We can just return it.
 	if (done) {
 		printf("floor\n");
-		memcpy(Dest, A.sa, n*n*sizeof(short));
+		memcpy(Dest, A.sa, matrix_size);
 		return;
 	}
 	
 	dm B;
-	B.sa = malloc(2*n*n*sizeof(short));
-	B.sat = malloc(2*n*n*sizeof(short)); //not used
-	short *degree = malloc(n*sizeof(short));
+	B.sa = malloc(2*matrix_size);
+	B.sat = malloc(2*matrix_size); //not used
+	int *degree = malloc(n*sizeof(int));
 	for (int i = 0; i < n; i++) {
-		short deg_i = 0;
+		int deg_i = 0;
 		#pragma omp parallel for reduction(+:deg_i)
 		for (int j = 0; j < n; j++) {
 			deg_i += A.sa[i*n+j];
@@ -96,8 +97,8 @@ void seidel_recursive(short *Dest, dm A, int n, int depth) {
 		#pragma omp parallel for
 		for (int j = 0; j < n; j++) {
 			// find vector product of A_{i}, and B_{,j}
-			short prod = 0;
-			short cutoff = T.sa[i*n+j]*degree[j];
+			int prod = 0;
+			int cutoff = T.sa[i*n+j]*degree[j];
 			for (int k = 0; k < n; k++) {
 				prod += T.sa[i*n+k]*A.sat[k+j*n]; // > cutoff exactly when col j of A and row i of T have more than degree[j] overlap.
 				if (prod >= cutoff) {
@@ -135,8 +136,9 @@ void seidel_recursive(short *Dest, dm A, int n, int depth) {
  * not sure that this is actually a problem, but I don't want to find out)
  */
 void seidel(int *A, int n) {
-	short *sa = malloc(n*n*sizeof(short));
-	short *sat = malloc(n*n*sizeof(short));
+	size_t matrix_size = (size_t)n * (size_t)n * sizeof(int);
+	int *sa = malloc(matrix_size);
+	int *sat = malloc(matrix_size);
 	for (int i = 0; i < n; i++) {
 		for (int j = 0; j < n; j++) {
 			sa[i*n+j] = A[i*n+j];
@@ -147,7 +149,7 @@ void seidel(int *A, int n) {
 	dm_A.sa = sa;
 	dm_A.sat = sat;
 	dm D;
-	D.sa = malloc(n*n*sizeof(short));
+	D.sa = malloc(matrix_size);
 	seidel_recursive(D.sa, dm_A, n, 0);
 	//printf("Seidel returned:\n");
 	//print(D, n);
