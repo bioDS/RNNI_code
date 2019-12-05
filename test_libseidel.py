@@ -22,7 +22,8 @@ def main():
         uRNNI = uRNNI_graph_on_n_taxa(n)
         print("Done generating uRNNI graph on %s taxa on %s at %s" % (n, time.strftime("%a, %b %d %Y"), time.strftime("%H:%M:%S")))
 
-    A = np.ascontiguousarray(uRNNI[0].get_adjacency(), dtype=np.int32)
+    AI = uRNNI[0].get_adjacency()
+    A = np.ascontiguousarray(AI[0], dtype=np.int32)	
     time1 = time.time()
     _seidel.seidel(A, A.shape[0])
     time2 = time.time()
