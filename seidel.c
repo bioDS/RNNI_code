@@ -51,10 +51,10 @@ void seidel_recursive(short *Dest, dm A, int n, int depth) {
 	B.sat = malloc(2*n*n*sizeof(short)); //not used
 	short *degree = malloc(n*sizeof(short));
 	for (int i = 0; i < n; i++) {
-		degree[i] = 0;
-		#pragma omp parallel for
+		short deg_i = 0;
+		#pragma omp parallel for reduction(+:deg_i)
 		for (int j = 0; j < n; j++) {
-			degree[i] += A.sa[i*n+j];
+			deg_i += A.sa[i*n+j];
 			if (i == j) {
 				B.sa[i*n+j] = 0;
 				B.sat[i+j*n] = 0;
@@ -74,6 +74,7 @@ void seidel_recursive(short *Dest, dm A, int n, int depth) {
 				}
 			}
 		}
+		degree[i] = deg_i;
 	}
 
 	if (verbose) {
