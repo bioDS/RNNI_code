@@ -1,2 +1,2 @@
 default:
-	gcc -fPIC -fopenmp -shared -o libseidel.so seidel.c
+	gcc -std=c99 -Ofast -fPIC -fopenmp -shared -o libseidel.so seidel.c
