@@ -18,24 +18,6 @@ void print(dm X, int n) {
 	}
 }
 
-dm dot(dm A, dm B, int n) {
-	short *Rsa = malloc(n*n*sizeof(short));
-	for (int i = 0; i < n; i++) {
-		#pragma omp parallel for
-		for (int j = 0; j < n; j++) {
-			// find vector product of A_{i}, and B_{,j}
-			short prod = 0;
-			for (int k = 0; k < n; k++) {
-				prod += A.sa[i*n+k]*B.sat[k+j*n];
-			}
-			Rsa[i*n+j] = prod;
-		}
-	}
-	dm dm_R;
-	dm_R.sa = Rsa;
-	return dm_R;
-}
-
 /* Recursive component of Seidel's algorithm.
  * Allocates a new matrix for returning D.
  * Z doesn't need to be allocated, maybe X does?
