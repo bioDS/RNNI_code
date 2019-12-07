@@ -44,6 +44,7 @@ void free_matrix(unsigned char **X, int n) {
  */
 dm seidel_recursive(dm A, int n, int depth) {
 	int num_threads = omp_get_max_threads();
+	printf("running on %d threads\n", num_threads);
 	if (depth > 5) {
 		dm D;
 		return D;
@@ -58,12 +59,12 @@ dm seidel_recursive(dm A, int n, int depth) {
 		print(A, n);
 	}
 	printf("checking A\n");
-	uint32_t **row_A = malloc(num_threads*sizeof(uint32_t*));
-	uint32_t **row_B = malloc(num_threads*sizeof(uint32_t*));
-	unsigned char **row_B_buf = malloc(num_threads*sizeof(uint32_t*));
-	uint32_t **col_A = malloc(BUF_SIZE(n)*sizeof(uint32_t));
-	uint32_t **col_B = malloc(BUF_SIZE(n)*sizeof(uint32_t));
-	unsigned char **col_B_buf = malloc(BUF_SIZE(n)*sizeof(uint32_t));
+	uint32_t *row_A[num_threads];
+	uint32_t *row_B[num_threads];
+	unsigned char *row_B_buf[num_threads];
+	uint32_t *col_A[num_threads];
+	uint32_t *col_B[num_threads];
+	unsigned char *col_B_buf[num_threads];
 	for (int i = 0; i < num_threads; i++) {
 		row_A[i] = malloc(BUF_SIZE(n)*sizeof(uint32_t));
 		row_B[i] = malloc(BUF_SIZE(n)*sizeof(uint32_t));
@@ -182,18 +183,18 @@ dm seidel_recursive(dm A, int n, int depth) {
 	D.sa = malloc(n*sizeof(unsigned char*));
 	#pragma omp parallel for
 	for (int i = 0; i < n; i++) {
-		uint32_t *row_T = malloc(BUF_SIZE(n)*sizeof(uint32_t));
-		uint32_t *row_D = malloc(BUF_SIZE(n)*sizeof(uint32_t));
-		unsigned char *row_D_buf = malloc(BUF_SIZE(n)*sizeof(int));
+		int thread_id = omp_get_thread_num();
+		uint32_t *row_T = row_B[thread_id];
+		uint32_t *row_D = col_B[thread_id];
+		unsigned char *row_D_buf = row_B_buf[thread_id];
 		p4ndec32(T.sa[i], n, row_T);
 		for (int j = 0; j < n; j++) {
-			uint32_t *col_A = malloc(BUF_SIZE(n)*sizeof(uint32_t));
-			p4ndec32(A.sat[j], n, col_A);
+			p4ndec32(A.sat[j], n, col_A[thread_id]);
 			// find vector product of A_{i}, and B_{,j}
 			uint32_t prod = 0;
 			uint32_t cutoff = row_T[j]*degree[j];
 			for (int k = 0; k < n; k++) {
-				prod += row_T[k]*col_A[k]; // > cutoff exactly when col j of A and row i of T have more than degree[j] overlap.
+				prod += row_T[k]*col_A[thread_id][k]; // > cutoff exactly when col j of A and row i of T have more than degree[j] overlap.
 				if (prod >= cutoff) {
 					break;
 				}
@@ -201,14 +202,10 @@ dm seidel_recursive(dm A, int n, int depth) {
 			row_D[j] = 2*row_T[j];
 			if (prod < cutoff)
 				row_D[j] -= 1;
-			free(col_A);
 		}
 		size_t row_d_size = p4nenc32(row_D, n, row_D_buf);
 		D.sa[i] = malloc(row_d_size);
 		memcpy(D.sa[i], row_D_buf, row_d_size);
-		free(row_D_buf);
-		free(row_T);
-		free(row_D);
 	}
 	printf("done calculating D\n");
 
@@ -232,12 +229,6 @@ dm seidel_recursive(dm A, int n, int depth) {
 		free(col_B[i]);
 		free(col_B_buf[i]);
 	}
-	free(row_A);
-	free(row_B);
-	free(row_B_buf);
-	free(col_A);
-	free(col_B);
-	free(col_B_buf);
 	free_matrix(T.sa, n); // is A.sa
 	free(degree);
 
