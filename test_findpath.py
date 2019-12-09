@@ -7,8 +7,6 @@ from findpath import *
 from os.path import exists
 from itertools import repeat
 from multiprocessing import Pool
-from tqdm import tqdm
-from p_tqdm import p_map
 import re
 
 def check_tree(tuple):
@@ -36,9 +34,9 @@ def check_findpath(n):
     D = FW[0]
     l = FW[1]
 
-    print("Finding paths & checking their distances")
+    print("Finding paths & checking their distances on %s at %s" % (time.strftime("%a, %b %d %Y"), time.strftime("%H:%M:%S")))
     with Pool() as pool:
-        equal_distances = p_map(check_tree, list(zip(uRNNI[1], repeat(uRNNI), repeat(D), repeat(l))))
+        equal_distances = pool.map(check_tree, list(zip(uRNNI[1], repeat(uRNNI), repeat(D), repeat(l))))
         all_correct = len(equal_distances) == sum(equal_distances)
         if (not all_correct):
             return False
