@@ -30,10 +30,9 @@ def main():
     print("C Seidel took {:.3f}ms".format((time2 - time1)*1000.0))
 
     time1 = time.time()
-    correct = uRNNI[0].Seidel()[0]
+    correct = uRNNI[0].Floyd_Warshall()[0]
     time2 = time.time()
-    print("Py Seidel took {:.3f}ms".format((time2 - time1)*1000.0))
-    #correct = uRNNI[0].Floyd_Warshall()[0]
+    print("Py Floyd_Warshall took {:.3f}ms".format((time2 - time1)*1000.0))
     print("The answer is:")
     print(np.array_equal(correct, A))
 
