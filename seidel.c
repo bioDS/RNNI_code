@@ -5,6 +5,7 @@
 #include "./TurboPFor/vp4.h"
 
 #include <omp.h>
+// TurboPFor likes having a little extra space in it's buffers.
 #define BUF_SIZE(n) ((n+127)/128+(n+32))
 typedef struct dual_mat {
 	unsigned char **sa;
@@ -23,14 +24,6 @@ void print(dm X, int n) {
 	free(row_A);
 }
 
-//unsigned char **allocate_matrix(int n) {
-//	unsigned char **X = malloc(n*sizeof(unsigned char*));
-//	for (int i = 0; i < n; i++) {
-//		X[i] = malloc(n*sizeof(int)); //TODO: this should be smaller, that's the point.
-//	}
-//	return X;
-//}
-
 void free_matrix(unsigned char **X, int n) {
 	for (int i = 0; i < n; i++) {
 		free(X[i]);
@@ -40,7 +33,9 @@ void free_matrix(unsigned char **X, int n) {
 
 /* Recursive component of Seidel's algorithm.
  * Allocates a new matrix for returning D.
- * Z doesn't need to be allocated, maybe X does?
+ * Expects the input matrix to be compressed with TurboPFor,
+ * and available as both arow & column major version.
+ * (for cache-friendly dot-products)
  */
 dm seidel_recursive(dm A, int n, int depth) {
 	int num_threads = omp_get_max_threads();
@@ -50,7 +45,7 @@ dm seidel_recursive(dm A, int n, int depth) {
 		return D;
 	}
 	size_t matrix_size = (size_t)n * sizeof(int);
-	const int verbose = 0;
+	const int verbose = 0; // optionally print entire matrices at each stop for debugging.
 	printf("recursion\n");
 	// test the base case
 	int done = 1;
@@ -59,6 +54,7 @@ dm seidel_recursive(dm A, int n, int depth) {
 		print(A, n);
 	}
 	printf("checking A\n");
+	// Allocate separate buffers for each thread.
 	uint32_t *row_A[num_threads];
 	uint32_t *row_B[num_threads];
 	unsigned char *row_B_buf[num_threads];
@@ -105,6 +101,7 @@ dm seidel_recursive(dm A, int n, int depth) {
 	uint32_t *degree = malloc(n*sizeof(uint32_t));
 	B.sa = malloc(n*sizeof(unsigned char *));
 	B.sat = malloc(n*sizeof(unsigned char *));
+	// Calculate the row-major matrix B for the next recursion.
 	#pragma omp parallel for shared(degree)
 	for (int i = 0; i < n; i++) {
 		int thread_id = omp_get_thread_num();
@@ -117,10 +114,12 @@ dm seidel_recursive(dm A, int n, int depth) {
 				row_B[thread_id][j] = 0;
 			} else {
 				row_B[thread_id][j] = 0;
-				if (row_A[thread_id][j] == 1) { // set the only other case where B[i*n+j] would be one while we're here.
+				if (row_A[thread_id][j] == 1) { // set the only other case where B[i*n+j] would be one while we're here. Avoids the second loop.
 					row_B[thread_id][j] = 1;
 				}
 				for (int k = 0; k < n; k++) {
+					// As soon as we've established that Z[i][j] > 0, we can set B[i][j] = 1 and stop.
+					// The actual value for Z[i][j] is never used.
 					if (row_A[thread_id][k] > 0 && col_A[thread_id][k] > 0) {
 						row_B[thread_id][j] = 1;
 						break;
@@ -128,7 +127,6 @@ dm seidel_recursive(dm A, int n, int depth) {
 				}
 			}
 		}
-		//memcpy(A.sa[i], row_A, n*sizeof(int)); //not changed
 		size_t row_b_size = p4nenc32(row_B[thread_id], n, row_B_buf[thread_id]);
 		B.sa[i] = malloc(row_b_size);
 		memcpy(B.sa[i], row_B_buf[thread_id], row_b_size);
@@ -137,6 +135,7 @@ dm seidel_recursive(dm A, int n, int depth) {
 	}
 	printf("done calculating B\n");
 	printf("calculating Bt\n");
+	// Calculate the column-major matrix B for the next recursion.
 	#pragma omp parallel for
 	for (int j = 0; j < n; j++) {
 		int thread_id = omp_get_thread_num();
@@ -147,10 +146,12 @@ dm seidel_recursive(dm A, int n, int depth) {
 				col_B[thread_id][i] = 0;
 			} else {
 				col_B[thread_id][i] = 0;
-				if (col_A[thread_id][i] == 1) { // set the only other case where B[i*n+j] would be one while we're here.
+				if (col_A[thread_id][i] == 1) { // set the only other case where Bt[i*n+j] would be one while we're here.
 					col_B[thread_id][i] = 1;
 				}
 				for (int k = 0; k < n; k++) {
+					// As soon as we've established that Z[i][j] > 0, we can set B[i][j] = 1 and stop.
+					// The actual value for Z[i][j] is never used.
 					if (row_A[thread_id][k] > 0 && col_A[thread_id][k] > 0) {
 						col_B[thread_id][i] = 1;
 						break;
@@ -158,7 +159,6 @@ dm seidel_recursive(dm A, int n, int depth) {
 				}
 			}
 		}
-		//memcpy(A.sa[i], row_A, n*sizeof(int)); //not changed
 		size_t col_b_size = p4nenc32(col_B[thread_id], n, col_B_buf[thread_id]);
 		B.sat[j] = malloc(col_b_size);
 		memcpy(B.sat[j], col_B_buf[thread_id], col_b_size);
@@ -184,6 +184,7 @@ dm seidel_recursive(dm A, int n, int depth) {
 	#pragma omp parallel for
 	for (int i = 0; i < n; i++) {
 		int thread_id = omp_get_thread_num();
+		// We don't need these buffers anymore, re-use them.
 		uint32_t *row_T = row_B[thread_id];
 		uint32_t *row_D = col_B[thread_id];
 		unsigned char *row_D_buf = row_B_buf[thread_id];
@@ -229,7 +230,7 @@ dm seidel_recursive(dm A, int n, int depth) {
 		free(col_B[i]);
 		free(col_B_buf[i]);
 	}
-	free_matrix(T.sa, n); // is A.sa
+	free_matrix(T.sa, n);
 	free(degree);
 
 	printf("going up\n");
@@ -243,28 +244,15 @@ dm seidel_recursive(dm A, int n, int depth) {
  * not sure that this is actually a problem, but I don't want to find out)
  */
 void seidel(unsigned int *A, int n) {
-	//printf("first row:\n");
-	//for (int i = 0; i < n; i++) {
-	//	printf("%d ", A[i]);
-	//}
-	//printf("\n");
-	size_t matrix_size = (size_t)n * (size_t)n * sizeof(int);
-	//unsigned char **sa = allocate_matrix(n);
+	size_t matrix_size = (size_t)n * (size_t)n * sizeof(int); //N.B. this will overflow an int.
 	unsigned char **sa = malloc(n*sizeof(unsigned char*));
 	unsigned int *At = malloc(matrix_size);
-	//unsigned char **sat = allocate_matrix(n);
 	unsigned char **sat = malloc(n*sizeof(unsigned char*));
 
-	//printf("a\n");
 	unsigned char* comp_A = malloc(BUF_SIZE(n)*sizeof(uint32_t));
 	for (int i = 0; i < n; i++) {
 		size_t row_a_size = p4nenc32((uint32_t*)&(A[i*n]), n, comp_A);
 		uint32_t *buf = malloc((n+127)/128+(n+32)*sizeof(int));
-		//p4ndec32(comp_A, n, buf);
-		//for (int j = 0; j < n; j++) {
-		//	printf("%d ", buf[j]);
-		//}
-		//printf("\n");
 		free(buf);
 		sa[i] = malloc(row_a_size);
 		memcpy(sa[i], comp_A, row_a_size);
@@ -272,15 +260,9 @@ void seidel(unsigned int *A, int n) {
 			At[i+j*n] = A[i*n+j];
 		}
 	}
-	//printf("b\n");
 	for (int i = 0; i < n; i++) {
 		size_t col_a_size = p4nenc32(&At[i*n], n, comp_A);
 		uint32_t *buf = malloc(BUF_SIZE(n)*sizeof(int));
-		//p4ndec32(comp_A, n, buf);
-		//for (int j = 0; j < n; j++) {
-		//	printf("%d ", buf[j]);
-		//}
-		//printf("\n");
 		sat[i] = malloc(col_a_size);
 		memcpy(sat[i], comp_A, col_a_size);
 	}
@@ -290,18 +272,15 @@ void seidel(unsigned int *A, int n) {
 	dm_A.sa = sa;
 	dm_A.sat = sat;
 	dm D = seidel_recursive(dm_A, n, 0);
-	//printf("Seidel returned:\n");
-	//print(D, n);
 
-	//convert A into D and free D.
+	// Convert A into D and free D.
+	// This way we clean up everything allocated in C, and don't mess with Python's memory management.
 	uint32_t *row_A = malloc(BUF_SIZE(n)*sizeof(uint32_t));
 	for (int i = 0; i < n; i++) {
 		p4ndec32(D.sa[i], n, row_A);
 		for (int j = 0; j < n; j++) {
-		//	printf("%d ", row_A[j]);
 			A[i*n+j] = row_A[j];
 		}
-		//printf("\n");
 	}
 	free(row_A);
 	free_matrix(D.sa, n);

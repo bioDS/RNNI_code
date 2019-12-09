@@ -13,29 +13,21 @@ _seidel.seidel_recursive.argtypes = (ndpointer(ctypes.c_int, flags="C_CONTIGUOUS
 
 # Graph methods.
 
+# Python Iimplementation of Seidel's algorithm. Only for testing, the C version is actually used
 def Seidel_recursive(A, count):
-    #print("Going down: {} at {}".format(count, time.strftime("%D %H:%M:%S")))
-    #print(A)
     n = np.shape(A)[0]
     if all(A[i][j] for i in range(n) for j in range(n) if i != j):
         return A
-    #print("starting dot")
     Z = np.dot(A, A)
-    #print(Z)
-    #print("done dot, starting B")
     B = np.array([
         [1 if i != j and (A[i][j] == 1 or Z[i][j] > 0) else 0 for j in range(n)]
     for i in range(n)])
-    #print(B)
-    #print("done B")
     T = Seidel_recursive(B, count + 1)
     X = np.dot(T,A)
     degree = [sum(A[i][j] for j in range(n)) for i in range(n)]
     D = np.array([
         [2 * T[i][j] if X[i][j] >= T[i][j] * degree[j] else 2 * T[i][j] - 1 for j in range(n)]
     for i in range(n)])
-    #print(D)
-    #print("Coming up: {} at {}".format(count, time.strftime("%D %H:%M:%S")))
     return D
 
 class Graph(object):
@@ -197,14 +189,13 @@ class Graph(object):
         return adjacency, index
 
 
+    # Seidel's algorithm for finding the distance between all pairs of nodes.
     def Seidel(self):
         adj_ind = self.get_adjacency()
         A = np.ascontiguousarray(adj_ind[0], dtype=np.int32)
         index = adj_ind[1]
         _seidel.seidel(A, A.shape[0])
 
-        # Find all-pairs distance
-        #D = Seidel_recursive(A, 0)
         return A, index
 
 

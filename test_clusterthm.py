@@ -1,7 +1,7 @@
 __author__ = 'Lena Collienne, Kieran Elmes'
 
 #checks whether the cluster thm holds
-#only works in reasonable time for up to 6 taxa
+#only works in reasonable time for up to 7 taxa
 #uses symmetry: only checks cluster theorem for trees sharing clusters of the form {1,...,m} for m <= floor(n/2). Result follows for all other clusters through relabelling + symmetry of ranked trees
 
 from uRNNI_graph import *
@@ -29,7 +29,7 @@ def get_cluster_subset(C, uRNNI):
 
 
 def check_cluster_thm(n):
-    # Check if the Cluster Theorem holds by using Dijkstra on whole uRNNI graph and Floyd Warshall on subgraph given by trees containing the same cluster
+    # Check if the Cluster Theorem holds by using Seidel on whole uRNNI graph and on the subgraph given by trees containing the same cluster
     if exists('output/uRNNI_graphs/tree_numbers_%s_taxa.txt' %n):
         uRNNI = read_uRNNI_graph('output/uRNNI_graphs/tree_numbers_%s_taxa.txt' %n, 'output/uRNNI_graphs/uRNNI_edges_%s_taxa.txt' %n)
     else:
@@ -54,7 +54,7 @@ def check_cluster_thm(n):
         # Compute the subgraph of uRNNI only containing trees with cluster C + compute all distances within this graph
         print("Start generating cluster graph distance matrix on %s taxa on %s at %s" % (n, time.strftime("%a, %b %d %Y"), time.strftime("%H:%M:%S")))
         cluster_graph = uRNNI[0].subgraph(cluster_subset)
-        distance_cluster = cluster_graph.Seidel() #FW does not work for more than 6 taxa
+        distance_cluster = cluster_graph.Seidel() #Seidel does not work for more than 7 taxa
         print("Done generating cluster graph distance matrix on %s taxa on %s at %s" % (n, time.strftime("%a, %b %d %Y"), time.strftime("%H:%M:%S")))
         print("Start comparing cluster %s on %s taxa on %s at %s" % (C, n, time.strftime("%a, %b %d %Y"), time.strftime("%H:%M:%S")))
 
@@ -95,5 +95,4 @@ def main():
         print("Cluster Theorem does NOT hold for %s taxa" %n)
 
 if __name__ == "__main__":
-    #cProfile.run('main()')
     main()
