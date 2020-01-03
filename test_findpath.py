@@ -9,6 +9,7 @@ from itertools import repeat
 from multiprocessing import Pool
 from multiprocessing import sharedctypes
 import re
+import pickle
 
 D = np.zeros((1,1))
 l = 0
@@ -40,19 +41,22 @@ def check_findpath(n):
         print("Done generating uRNNI graph on %s taxa on %s at %s" % (n, time.strftime("%a, %b %d %Y"), time.strftime("%H:%M:%S")))
 
     if exists('output/distance_matrices/distance_matrix_%s_taxa.npy' %n):
-        S = np.load('output/distance_matrices/distance_matrix_%s_taxa.npy' %n)
-        l = S[1]
+        D = np.load('output/distance_matrices/distance_matrix_%s_taxa.npy' %n, allow_pickle=False)
+        #l = np.load('output/distance_matrices/distance_matrix_index_%s_taxa.npy' %n, allow_pickle=True)
+        l = pickle.load(open('output/distance_matrices/distance_matrix_index_%s_taxa.npy' %n, "rb"))
     else:
         print("Start generating distance matrix on %s taxa on %s at %s" % (n, time.strftime("%a, %b %d %Y"), time.strftime("%H:%M:%S")))
         S = uRNNI[0].Seidel() #Seidel does not work for more than 7 taxa
         #S.tofile('output/distance_matrices/distance_matrix_%s_taxa' %n)
-        np.save('output/distance_matrices/distance_matrix_%s_taxa.npy' %n, S)
+        np.save('output/distance_matrices/distance_matrix_%s_taxa.npy' %n, S[0], allow_pickle=False)
+        #np.save('output/distance_matrices/distance_matrix_index_%s_taxa.npy' %n, S[1], allow_pickle=True)
+        pickle.dump(S[1], open('output/distance_matrices/distance_matrix_index_%s_taxa.npy' %n, "wb"), pickle.HIGHEST_PROTOCOL)
         l = S[1]
+        D = S[0]
     #FW[0][1][2] = 0
     #tmp = np.ctypeslib.as_ctypes(S)
     #D_shared = sharedctypes.RawArray(ctypes.c_int32, tmp)
     #D = np.ctypeslib.as_array(tmp, shape=((n,n)))
-    D = S[0]
 
 
     print("Finding paths & checking their distances on %s at %s" % (time.strftime("%a, %b %d %Y"), time.strftime("%H:%M:%S")))
