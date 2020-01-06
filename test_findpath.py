@@ -8,6 +8,8 @@ from os.path import exists
 from itertools import repeat
 from multiprocessing import Pool
 from multiprocessing import sharedctypes
+from tqdm import tqdm
+from p_tqdm import p_map
 import re
 import pickle
 
@@ -60,10 +62,8 @@ def check_findpath(n):
 
 
     print("Finding paths & checking their distances on %s at %s" % (time.strftime("%a, %b %d %Y"), time.strftime("%H:%M:%S")))
-    #for tree1 in uRNNI[1]:
-    #    check_tree(tree1)
     with Pool() as pool:
-        equal_distances = pool.map(check_tree, uRNNI[1])
+        equal_distances = p_map(check_tree, uRNNI[1])
         all_correct = len(equal_distances) == sum(equal_distances)
         if (not all_correct):
             return False
