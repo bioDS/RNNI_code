@@ -1,6 +1,7 @@
 # Geometry of Ranked Nearest Neighbour Interchange Space of Phylogenetic Trees - Code Repository
 
-This repository contains the code used to check the FINDPATH algorithm, and the Cluster Theorem.
+This repository contains the code used to check the FINDPATH algorithm, and the Cluster Theorem from the paper [Geometry of Ranked Nearest Neighbour Interchange Space of Phylogenetic Trees](https://doi.org/10.1101/2019.12.19.883603) by Lena Collienne, Kieran Elmes, Mareike Fischer, David Bryant, and Alex Gavryushkin.
+
 
 ## Compilation
 Requires gcc with OpenMP support.
@@ -10,6 +11,7 @@ Requires gcc with OpenMP support.
 `git submodule update`
 
 `make`
+
 
 ## Files
 File			|	Description
