@@ -55,10 +55,6 @@ def check_findpath(n):
         pickle.dump(S[1], open('output/distance_matrices/distance_matrix_index_%s_taxa.npy' %n, "wb"), pickle.HIGHEST_PROTOCOL)
         l = S[1]
         D = S[0]
-    #FW[0][1][2] = 0
-    #tmp = np.ctypeslib.as_ctypes(S)
-    #D_shared = sharedctypes.RawArray(ctypes.c_int32, tmp)
-    #D = np.ctypeslib.as_array(tmp, shape=((n,n)))
 
 
     print("Finding paths & checking their distances on %s at %s" % (time.strftime("%a, %b %d %Y"), time.strftime("%H:%M:%S")))
