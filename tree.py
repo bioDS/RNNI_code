@@ -112,7 +112,8 @@ def one_neighbourhood(tree):
     # Returns a list of trees that are one RNNI move apart from the given tree
     N = []
     nni = []
-    for i in range(len(tree)-1):
+    for i in range(1,len(tree)-1):
+        print(tree[i])
         rank = swap_ranks(tree, i)
         nni  = make_nni(tree,i)
         if rank != None:
@@ -122,7 +123,7 @@ def one_neighbourhood(tree):
     return N
 
 def one_neighbourhood_uRNNI(tree):
-    # Returns a list of trees that are one RNNI move apart from the given tree, the given tree must be in RNNI but there are no moves performed on the first n sets
+    # Returns a list of trees that are one RNNI move apart from the given tree, the given tree must be in RNNI but there are no moves performed on the first n sets (trivial cluster)
     N = []
     nni = []
     for i in range(int((len(tree)+1)/2), len(tree)-1):
