@@ -15,12 +15,12 @@ import re
 def get_cluster_subset(C, uRNNI):
     #Given a cluster C, this function returns the indices of trees in uRNNI that contain this cluster
     cluster_subset = set()
-    n = len(string_to_tree(uRNNI[1][0]))+1 #Take arbitrary tree to define n
+    n = len(uRNNI[1][0])+1 #Take arbitrary tree to define n
     taxa = set() #taxon set {1,..,n}
     for i in range(1,n+1):
         taxa.add(i)
     for i in uRNNI[0].vertices:
-        tree = string_to_tree(uRNNI[1][i])
+        tree = uRNNI[1][i]
         for node in tree:
             if node == C:
                 cluster_subset.add(i)
