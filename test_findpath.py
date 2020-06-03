@@ -12,6 +12,7 @@ from tqdm import tqdm
 from p_tqdm import p_map
 import re
 import pickle
+import os
 
 D = np.zeros((1,1))
 l = 0
@@ -33,6 +34,11 @@ def check_findpath(n):
     global D
     global l
     global uRNNI
+    try:
+        os.makedirs("output/distance_matrices")
+    except OSError:
+        if not os.path.isdir("output/distance_matrices"):
+            raise
     # Check if FINDPATH computes exact distances by comparing these distances with exact ones (Seidel on RNNI graph)
     if exists('output/uRNNI_graphs/tree_numbers_%s_taxa.txt' %n):
         uRNNI = read_uRNNI_graph('output/uRNNI_graphs/tree_numbers_%s_taxa.txt' %n, 'output/uRNNI_graphs/uRNNI_edges_%s_taxa.txt' %n)
