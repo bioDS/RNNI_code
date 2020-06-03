@@ -132,7 +132,7 @@ def read_uRNNI_graph(nodefile, edgefile):
     # First read vertices
     for line in nfile:
         vertices.add(i)
-        tree_list.append(line.rstrip('\n'))
+        tree_list.append(string_to_tree(line.rstrip('\n')))
         i += 1
     nfile.close()
     # Second read edges

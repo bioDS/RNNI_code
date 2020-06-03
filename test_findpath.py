@@ -22,7 +22,7 @@ def check_tree(tree1):
     global l
     global uRNNI
     for tree2 in uRNNI[1]:
-        findpath_len = len(findpath(string_to_tree(str(tree1)),string_to_tree(str(tree2)))) - 1
+        findpath_len = len(findpath(tree1,tree2)) - 1
         actual_len = D[l[uRNNI[1].index(tree1)]][l[uRNNI[1].index(tree2)]]
         if (findpath_len != actual_len):
             print("{} != {}, Failed on:".format(findpath_len, actual_len))
