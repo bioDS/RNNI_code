@@ -2,6 +2,7 @@ __author__ = 'Lena Collienne'
 # Functions to compute the uRNNI graph (ultrametric Ranked Nearest Neighbour Interchange) as described in (Gavryushkin, Whidden, Matsen 2018) and computing shortest paths within this graph
 
 import os.path
+import os
 
 from tree_generator import *
 from graph import *
@@ -37,6 +38,11 @@ def uRNNI_graph_on_n_taxa(n):
                 uRNNI.edges.add(edge1)
 
     #print uRNNI graph in file
+    try:
+        os.makedirs("output/uRNNI_graphs")
+    except OSError:
+        if not os.path.isdir("output/uRNNI_graphs"):
+            raise
     uRNNI.print_graph_to_file('output/uRNNI_graphs/uRNNI_edges_' + str(n) + '_taxa.txt')
     #print trees into file, number of line of tree equals vertex number that represents this tree in uRNNI graph
     f = open('output/uRNNI_graphs/tree_numbers_' + str(n) + '_taxa.txt','w')
