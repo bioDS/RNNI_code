@@ -136,10 +136,3 @@ def read_uRNNI_graph(nodefile, edgefile):
         edges.add(line.rstrip('\n'))
     uRNNI = [Graph(vertices, edges), tree_list]
     return uRNNI
-
-
-
-n=4
-print("Start generating uRNNI graph on %s taxa on %s at %s" % (n, time.strftime("%a, %b %d %Y"), time.strftime("%H:%M:%S")))
-uRNNI = uRNNI_graph_on_n_taxa(n)
-print("Done generating uRNNI graph on %s taxa on %s at %s" % (n, time.strftime("%a, %b %d %Y"), time.strftime("%H:%M:%S")))
