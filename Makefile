@@ -1,3 +1,5 @@
+CC? = gcc
+
 all: TurboPFor/vp4d.o seidel 
 
 seidel:
