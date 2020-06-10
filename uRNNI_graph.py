@@ -58,7 +58,7 @@ def add_leaves(tree):
     tree_with_leaves = []
     n = len(tree) + 1
     for j in range(1,n+1):
-        tree_with_leaves.append(set([j]))
+        tree_with_leaves.append(set([str(j)]))
     for k in tree:
         tree_with_leaves.append(set(k))
     return tree_with_leaves
