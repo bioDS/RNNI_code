@@ -25,7 +25,7 @@ def string_to_list_of_sets(s):
         current_set = set()
         m = re.findall(r"(\d+)",i)
         for j in m:
-            current_set.add(j)
+            current_set.add(int(j))
         output.append(current_set)
     return output
 
@@ -113,7 +113,6 @@ def one_neighbourhood(tree):
     N = []
     nni = []
     for i in range(1,len(tree)-1):
-        print(tree[i])
         rank = swap_ranks(tree, i)
         nni  = make_nni(tree,i)
         if rank != None:

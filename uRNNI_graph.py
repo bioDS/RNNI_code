@@ -26,6 +26,7 @@ def uRNNI_graph_on_n_taxa(n):
         nonu_tree = add_leaves(tree)
         # Add all edges incident to tree to uRNNI graph
         for neighbour in one_neighbourhood_uRNNI(nonu_tree):
+            print(neighbour)
             # First delete the sets containing just one leaf and then convert the tree to a string -> ultrametric tree u_neighbour
             u_neighbour = []
             for i in neighbour:
@@ -58,7 +59,7 @@ def add_leaves(tree):
     tree_with_leaves = []
     n = len(tree) + 1
     for j in range(1,n+1):
-        tree_with_leaves.append(set([str(j)]))
+        tree_with_leaves.append(set([j]))
     for k in tree:
         tree_with_leaves.append(set(k))
     return tree_with_leaves
