@@ -112,7 +112,7 @@ def one_neighbourhood(tree):
     # Returns a list of trees that are one RNNI move apart from the given tree
     N = []
     nni = []
-    for i in range(1,len(tree)-1):
+    for i in range(int((len(tree)+1)/2),len(tree)-1):
         rank = swap_ranks(tree, i)
         nni  = make_nni(tree,i)
         if rank != None:
