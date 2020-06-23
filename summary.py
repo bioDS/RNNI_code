@@ -58,16 +58,16 @@ def get_closer(s,trees,distance):
     return(output)
 
 def centroid(trees,s):
-    # extensive Centroid search starting from s
+    # Centroid search starting from s
     # Initialization to run get_closer_function
     startdist = 0
     for i in trees:
         path = len(findpath(collapse(s),collapse(i)))-1
         startdist += path ** 2 
     closer = get_closer(s,trees,startdist)
-    output = []
+    output = {}
     if not closer:
-        output.append([expand(s),startdist])
+        output[str(expand(s))] = startdist
     else:    
         while bool(closer):
             for i in range(0,len(closer)):
@@ -82,7 +82,12 @@ def centroid(trees,s):
                 else:
                     # No tree in one neighbourhood of i is getting any better distance
                     # --> i is a local optimum and gets put into the output and deleted from things to work on
-                    output.append(closer[i])
+                    if not str(closer[i][0]) in output:
+                        output[str(closer[i][0])] = closer[i][1]
+                    # else:
+                        # This would be the case if there are multiple paths that are considered to get
+                        # to this optimal node
+                        # print('Err: Found an interesting example?')
                 closer.pop(i)
     return(output)
 
