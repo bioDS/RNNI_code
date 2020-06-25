@@ -30,12 +30,12 @@ def index_to_tree(tree_index):
     for i in range(len(tree_index)):
         left_index = tree_index[i][0]
         right_index = tree_index[i][1]
-        left = running_index[left_index - 1]
-        right = running_index[right_index - 1]
+        left = running_index[left_index]
+        right = running_index[right_index]
         running_index.append(left + right)
         output_tree.append(sorted(left + right))
-        del running_index[tree_index[i][0]-1]
-        del running_index[tree_index[i][1]-2]
+        del running_index[left_index]
+        del running_index[right_index - 1]
     return output_tree
 
 
@@ -111,7 +111,6 @@ def generate_random_trees(n, k):
             a = random.randint(0, n - 1 - j - 1)
             b = random.randint(a + 1, n - 1 - j)
             new_index.append([a, b])
-        print(new_index)
         output.append(index_to_tree(new_index))
     return output
 
