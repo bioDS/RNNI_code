@@ -33,7 +33,7 @@ def index_to_tree(tree_index):
         left = running_index[left_index]
         right = running_index[right_index]
         running_index.append(left + right)
-        output_tree.append(sorted(left + right))
+        output_tree.append(set(sorted(left + right)))
         del running_index[left_index]
         del running_index[right_index - 1]
     return output_tree
