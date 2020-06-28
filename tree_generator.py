@@ -41,7 +41,7 @@ def index_to_tree(tree_index):
 
 def is_final(index, n):
     # True if index of the tree on n taxa is final.
-    for i in range(n-1):
+    for i in range(n):
         pair = index[i]
         if pair[1] != n - i or pair[0] != n - i - 1:
             return False
@@ -53,22 +53,22 @@ def next_tree_index(index, n):
     # If the index is final, returns 0.
     if is_final(index, n):
         return 0
-    for i in range(n-1):
+    for i in range(n):
         pair = index[i]
-        if pair[1] < n - i:
+        if pair[1] < n - i - 1:
             index[i] = [index[i][0], index[i][1] + 1]
             for j in range(i):
-                index[j] = [1, 2]
+                index[j] = [0, 1]
             return index
-        elif pair[0] < n - i - 1:
+        elif pair[0] < n - i - 2:
             index[i] = [index[i][0] + 1, index[i][0] + 2]
             for j in range(i):
-                index[j] = [1, 2]
+                index[j] = [0, 1]
             return index
         elif pair[1] - pair[0] > 1:
             index[i] = [index[i][0] + 1, index[i][1]]
             for j in range(i):
-                index[j] = [1, 2]
+                index[j] = [0, 1]
             return index
 
 
@@ -78,7 +78,7 @@ def all_trees_on_n_taxa(n):
         index_file = open("all_trees_as_indices_on_%s_taxa.txt" % n, "w")
         first_tree_index = []
         for i in range(n-1):
-            first_tree_index.append([1, 2])
+            first_tree_index.append([0, 1])
         index_file.write(str(first_tree_index) + "\n")
     else:
         print("The index-file is not empty")
