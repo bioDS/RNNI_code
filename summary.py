@@ -38,56 +38,58 @@ def collapse(tree):
 
 ################### Algorithm 1 ######################
 
-def get_closer(s,trees,distance):
+def get_closer(s, trees, distance):
     # Given a set of trees, a starting vertex and a current distance
     # --> compute trees within one neighbourhood of that vertex that make the distance smaller
     Nei = one_neighbourhood(expand(s))
     output = []
-    
     for i in Nei:
         # For each Neibour of start compute trees i that make distance smaller than it is currently
         cur = 0
         for j in trees:
-            path = len(findpath(collapse(i),collapse(j)))-1
+            path = len(findpath(collapse(i), collapse(j))) - 1
             cur += path ** 2
             # maybe only sum of distances -> think if that even makes sense
             # cur += path
-        if(cur < distance):
+        if (cur < distance):
             # Maybe <= but that would be weird, look into that
-            output.append([i,cur])
-    return(output)
+            output.append([i, cur])
+    return (output)
 
-def centroid(trees,s):
+
+def centroid(trees, s):
     # Centroid search starting from s
     # Initialization to run get_closer_function
     startdist = 0
     for i in trees:
-        path = len(findpath(collapse(s),collapse(i)))-1
-        startdist += path ** 2 
-    closer = get_closer(s,trees,startdist)
+        path = len(findpath(collapse(s), collapse(i))) - 1
+        startdist += path ** 2
+    closer = get_closer(s, trees, startdist)
     output = {}
     if not closer:
         output[str(expand(s))] = startdist
-    else:    
+    else:
         while bool(closer):
-            for i in range(0,len(closer)):
+            update = []
+            for i in range(len(closer)):
                 # for each tree that is closer
-                cur = get_closer(closer[i][0],trees,closer[i][1])    
+                cur = get_closer(closer[i][0], trees, closer[i][1])
                 if bool(cur):
                     # there are trees that give a smaller distance = cur
-                    # we need to add each tree to close, i.e. check if there is anything in their neighbourhood
+                    # we need to add each tree to closer, i.e. check if there is anything in their neighbourhood
                     # which gives better distance
                     for j in cur:
-                        closer.append(j)
+                        update.append(j)
                 else:
                     # No tree in one neighbourhood of i is getting any better distance
                     # --> i is a local optimum and gets put into the output and deleted from things to work on
                     if not str(closer[i][0]) in output:
                         output[str(closer[i][0])] = closer[i][1]
                     # else:
-                        # This would be the case if there are multiple paths that are considered to get
-                        # to this optimal node
-                        # print('Err: Found an interesting example?')
-                closer.pop(i)
-    return(output)
+                    # This would be the case if there are multiple paths that are considered to get
+                    # to this optimal node
+                    # print('Err: Found an interesting example?')
+                #closer.pop(i)
+            closer = update
+    return (output)
 
