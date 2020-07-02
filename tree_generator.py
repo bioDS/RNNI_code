@@ -41,9 +41,9 @@ def index_to_tree(tree_index):
 
 def is_final(index, n):
     # True if index of the tree on n taxa is final.
-    for i in range(n):
+    for i in range(len(index)):
         pair = index[i]
-        if pair[1] != n - i or pair[0] != n - i - 1:
+        if pair[1] != n - i - 1  or pair[0] != n - i - 2:
             return False
     return True
 
