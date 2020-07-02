@@ -1,11 +1,8 @@
 __author__ = "Lars Berling"
 
-# setwd("~/Desktop/CodingMA/RNNI_code")
-
 from findpath import *
-
-global fp_count
-global tracking_paths
+import sys
+import globals
 
 def sort_trees(trees):
     # For a set of trees returned the sorted trees
@@ -39,49 +36,70 @@ def collapse(tree):
         return (output)
     else:
         return (tree)
+
 ################### Alex Algorithm ######################
-# Go from 1 tree and consider a tree within the 1-neighbour hood that minimized the sum of distances t oll other trees given
-# Do this until no more can be done
+
 def update_tracking(path):
-    global tracking_paths
+    # Update the gloabal dict to track the already computed distances
+    # For all trees on the given path, save the distance in the tracking dict
     for i in range(len(path)-1):
         for j in range(i,len(path)):
-            if str(expand(path[i])) in tracking_paths:
+            if str(expand(path[i])) in globals.tracking_paths:
                 # tree i in path has already been visited before
-                if str(expand(path[j])) in tracking_paths[str(expand(path[i]))]:
+                if str(expand(path[j])) in globals.tracking_paths[str(expand(path[i]))]:
                     # print('ERR: Already computed path gets computed again!')
-                    if not tracking_paths[str(expand(path[i]))][str(expand(path[j]))] == j-i:
-                        print('ERR!')
+                    if not globals.tracking_paths[str(expand(path[i]))][str(expand(path[j]))] == j-i:
+                        # Check if the distance was already computed and if so check if it is equal
+                        print('ERR!: update_tracking() found shortest paths with different lengths!')
                 else:
-                    tracking_paths[str(expand(path[i]))][str(expand(path[j]))] = j-i
-            elif str(path[j]) in tracking_paths:
+                    globals.tracking_paths[str(expand(path[i]))][str(expand(path[j]))] = j-i
+            elif str(path[j]) in globals.tracking_paths:
                 # tree j in path has already been visited before
-                if str(expand(path[i])) in tracking_paths[str(expand(path[j]))]:
+                if str(expand(path[i])) in globals.tracking_paths[str(expand(path[j]))]:
                     # print('ERR: Already computed path gets computed again!')#
-                    if not tracking_paths[str(expand(path[j]))][str(expand(path[i]))] == j-i:
-                        print('ERR!')
+                    if not globals.tracking_paths[str(expand(path[j]))][str(expand(path[i]))] == j-i:
+                        # Check if the distance was already computed and if so check if it is equal
+                        print('ERR!: update_tracking() found shortest paths with different lengths!')
                 else:
-                    tracking_paths[str(expand(path[j]))][str(expand(path[i]))] = j-i
+                    globals.tracking_paths[str(expand(path[j]))][str(expand(path[i]))] = j-i
             else:
-                tracking_paths[str(expand(path[i]))] = {str(expand(path[j])) : j-i}
+                # New entry i.e. neither path[i] nor path[j] were in the tracking dict before
+                globals.tracking_paths[str(expand(path[i]))] = {str(expand(path[j])) : j-i}
+
+#####
+# update_tracking_m() only puts the start and end node of the path in the tracking dict:
+# Improvement similar to saving all trees on the path but not as good --> may be relevant if the memory of the tracking dict gets to big
+#####
+# def update_tracking_m(path):
+#     if str(expand(path[0])) in globals.tracking_paths:
+#         if str(expand(path[len(path)-1])) in globals.tracking_paths[str(expand(path[0]))]:
+#             if not globals.tracking_paths[str(expand(path[0]))][str(expand(path[len(path)-1]))] == len(path)-1:
+#                 print('ERR!')
+#         else:
+#             globals.tracking_paths[str(expand(path[0]))][str(expand(path[len(path)-1]))] = len(path)-1
+#     elif str(expand(path[len(path)-1])) in globals.tracking_paths:
+#         if str(expand(path[0])) in globals.tracking_paths[str(expand(path[len(path)-1]))]:
+#             if not globals.tracking_paths[str(expand(path[len(path)-1]))][str(expand(path[0]))] == len(path)-1:
+#                 print('ERR!')
+#         else:
+#             globals.tracking_paths[str(expand(path[len(path)-1]))][str(expand(path[0]))] = len(path)-1
+#     else:
+#         globals.tracking_paths[str(expand(path[0]))] = {str(expand(path[len(path)-1])) : len(path)-1}
 
 def check_tracking(tree1,tree2):
-    global tracking_paths
+    # Check if the path between the trees tree1 and tree2 has already been computed before, if not return -1
     out = -1
-    if str(tree1) in tracking_paths:
-        if str(tree2) in tracking_paths[str(tree1)]:
-            out = tracking_paths[str(tree1)][str(tree2)]
-    elif str(tree2) in tracking_paths:
-        if str(tree1) in tracking_paths[str(tree2)]:
-            out = tracking_paths[str(tree2)][str(tree1)]
+    if str(tree1) in globals.tracking_paths:
+        if str(tree2) in globals.tracking_paths[str(tree1)]:
+            out = globals.tracking_paths[str(tree1)][str(tree2)]
+    elif str(tree2) in globals.tracking_paths:
+        if str(tree1) in globals.tracking_paths[str(tree2)]:
+            out = globals.tracking_paths[str(tree2)][str(tree1)]
     return out
-
 
 def get_closer(s, trees, distance):
     # Given a set of trees, a starting vertex and a current distance
     # --> compute trees within one neighbourhood of that vertex that make the distance smaller
-    global fp_count
-    global tracking_paths
     Nei = one_neighbourhood(expand(s))
     output = []
     for i in Nei:
@@ -95,7 +113,8 @@ def get_closer(s, trees, distance):
                 cur_p = findpath(collapse(i), collapse(j))
                 path = len(cur_p) - 1
                 update_tracking(cur_p)
-                fp_count += 1
+                # update_tracking_m(cur_p) # Just saving start and end node of the path
+                globals.fp_count += 1
             else:
                 path = check
             cur += path ** 2
@@ -111,10 +130,8 @@ def get_closer(s, trees, distance):
 def centroid(trees, s):
     # Centroid search starting from s
     # Initialization to run get_closer_function
-    global fp_count
-    global tracking_paths
-    fp_count = 0
-    tracking_paths = {}
+    globals.fp_count = 0
+    # tracking_paths = {}
     startdist = 0
     for i in trees:
         # check tracking_paths 
@@ -123,7 +140,8 @@ def centroid(trees, s):
             cur_p = findpath(collapse(s), collapse(i))
             path = len(cur_p) - 1
             update_tracking(cur_p)
-            fp_count += 1
+            # update_tracking_m(cur_p) # Just saving start and end node of the path
+            globals.fp_count += 1
         else:
             path = check
         startdist += path ** 2
@@ -154,14 +172,14 @@ def centroid(trees, s):
                     # print('Err: Found an interesting example?')
                 #closer.pop(i)
             closer = update
-    print('#FP Calculations : ', fp_count)
+    # print('#FP Calculations : ', fp_count)
     return (output)
 
 
+# get_closer_o is a version without keeping track of already computed paths
 def get_closer_o(s, trees, distance):
     # Given a set of trees, a starting vertex and a current distance
     # --> compute trees within one neighbourhood of that vertex that make the distance smaller
-    global fp_count
     Nei = one_neighbourhood(expand(s))
     output = []
     for i in Nei:
@@ -169,7 +187,7 @@ def get_closer_o(s, trees, distance):
         cur = 0
         for j in trees:
             path = len(findpath(collapse(i), collapse(j)))-1
-            fp_count += 1
+            globals.fp_count += 1
             cur += path ** 2
             # cur += path
             # maybe only sum of distances -> think if that even makes sense
@@ -179,16 +197,15 @@ def get_closer_o(s, trees, distance):
             output.append([i, cur])
     return (output)
 
-
+# centroid_o is a version without keeping track of already computed paths
 def centroid_o(trees, s):
     # Centroid search starting from s
     # Initialization to run get_closer_function
-    global fp_count
-    fp_count = 0
+    globals.fp_count = 0
     startdist = 0
     for i in trees:
         path = len(findpath(collapse(s), collapse(i)))-1
-        fp_count += 1
+        globals.fp_count += 1
         startdist += path ** 2
     closer = get_closer_o(s, trees, startdist)
     output = {}
@@ -217,5 +234,38 @@ def centroid_o(trees, s):
                     # print('Err: Found an interesting example?')
                 #closer.pop(i)
             closer = update
-    print('#FP Calculations : ',fp_count)
+    # print('#FP Calculations : ',fp_count)
     return (output)
+
+######### Functions for Checking Centroid() #########
+# for a set of trees compute the global minimum sum of squares in the treegraph(whole tree space graph)
+def global_opt(trees,treegraph):
+    opt = sys.maxsize
+    for t in treegraph:
+        startdist = 0
+        for i in trees:
+            check = check_tracking(expand(t), expand(i))
+            if check == -1:
+                cur_p = findpath(collapse(t), collapse(i))
+                path = len(cur_p) - 1
+                update_tracking(cur_p)
+            else:
+                path = check
+            startdist += path ** 2
+        if startdist < opt:
+            opt = startdist
+    return(opt)
+
+# for a set of trees compute the global minimum sum of squares in the treegraph(whole tree space graph)
+# Version without tracking already computed paths
+def slow_global_opt(trees,treegraph):
+    opt = sys.maxsize
+    for t in treegraph:
+        startdist = 0
+        for i in trees:
+            cur_p = findpath(collapse(t), collapse(i))
+            path = len(cur_p) - 1
+            startdist += path ** 2
+        if startdist < opt:
+            opt = startdist
+    return(opt)
