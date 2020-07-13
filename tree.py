@@ -1,12 +1,25 @@
 __author__ = 'Lena Collienne and @gavruskin'
 # Methods for trees including writing nd reading from files and RNNI moves
 
+from multipledispatch import dispatch
 import re
 
+@dispatch()
 def read_trees_from_file():
     # Reads trees from tree_file and returns them as tree_list.
     # Trees assumed to be in tau-format.
     tree_file = input("What is the file with trees?\n")
+    f = open(tree_file, 'r')
+    tree_list = []
+    for tree in f:
+        tree_list.append(tree)
+    f.close()
+    return tree_list
+@dispatch(str)
+def read_trees_from_file(tree_file):
+    # Reads trees from tree_file and returns them as tree_list.
+    # Trees assumed to be in tau-format.
+    # tree_file = input("What is the file with trees?\n")
     f = open(tree_file, 'r')
     tree_list = []
     for tree in f:
@@ -26,6 +39,7 @@ def string_to_list_of_sets(s):
         m = re.findall(r"(\d+)",i)
         for j in m:
             current_set.add(int(j))
+        # current_set = sorted(current_set)    
         output.append(current_set)
     return output
 
@@ -113,6 +127,7 @@ def one_neighbourhood(tree):
     N = []
     nni = []
     for i in range(int((len(tree)+1)/2),len(tree)-1):
+        # print(tree[i])
         rank = swap_ranks(tree, i)
         nni  = make_nni(tree,i)
         if rank != None:

@@ -80,13 +80,12 @@ def is_centroid_connected(n, k, x):
             out[i] = 'Unique Centroid'
     return(out)
 
-def size_of_centoid(n,k,x):
+def size_of_centroid(n,k,x):
     # Function that computes the global optimal solution for n taxa, k trees and x random sample sets and returns a list
     # with the size of the centroid / how many trees minimize the sum of squared distances globally
     out = []
     all_trees_on_n_taxa(n)
-    print('File Input should be all_trees_on_%i_taxa.txt' % n)
-    gn = read_trees_from_file()
+    gn = read_trees_from_file('all_trees_on_%i_taxa.txt'%n)
     for i in range(len(gn)):
         gn[i] = string_to_list_of_sets(gn[i])
     for i in range(x):
