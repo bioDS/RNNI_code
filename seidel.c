@@ -305,6 +305,7 @@ void seidel(unsigned int *A, int n) {
 		free(sat[i]);
 	}
 	free(sa);
+	free(sat);
 	free(row_A);
 	free_matrix(D.sa, n);
 }
