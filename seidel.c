@@ -93,15 +93,23 @@ dm seidel_recursive(dm A, int n, int depth) {
 	// the array is all ones. We can just return it.
 	if (done) {
 		printf("floor\n");
-		uint32_t *row_A = malloc(BUF_SIZE(n)*sizeof(uint32_t));
+		uint32_t *tmp_row_A = malloc(BUF_SIZE(n)*sizeof(uint32_t));
 		dm D;
 		D.sa = malloc(n*sizeof(unsigned char*));
 		for (int i = 0; i < n; i++) {
-			size_t row_size = p4ndec32(A.sa[i], n, row_A);
+			size_t row_size = p4ndec32(A.sa[i], n, tmp_row_A);
 			D.sa[i] = malloc(row_size);
 			memcpy(D.sa[i], A.sa[i], row_size);
 		}
-		free(row_A);
+		free(tmp_row_A);
+		for (int i = 0; i < num_threads; i++) {
+			free(row_A[i]);
+			free(row_B[i]);
+			free(row_B_buf[i]);
+			free(col_A[i]);
+			free(col_B[i]);
+			free(col_B_buf[i]);
+		}
 
 		return D;
 	}
@@ -292,6 +300,11 @@ void seidel(unsigned int *A, int n) {
 			A[i*n+j] = row_A[j];
 		}
 	}
+	for (int i = 0; i < n; i++) {
+		free(sa[i]);
+		free(sat[i]);
+	}
+	free(sa);
 	free(row_A);
 	free_matrix(D.sa, n);
 }
