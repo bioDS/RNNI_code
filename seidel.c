@@ -48,7 +48,12 @@ dm seidel_recursive(dm A, int n, int depth) {
 	const int verbose = 0; // optionally print entire matrices at each stop for debugging.
 	printf("recursion\n");
 	// test the base case
-	int done = 1;
+	/* int done = 1; */
+	int thread_done[num_threads];
+	for (int i = 0; i < num_threads; i++) {
+		thread_done[i] = 1;
+	}
+
 	if (verbose) {
 		printf("A:\n");
 		print(A, n);
@@ -69,15 +74,20 @@ dm seidel_recursive(dm A, int n, int depth) {
 		col_B[i] = malloc(BUF_SIZE(n)*sizeof(uint32_t));
 		col_B_buf[i] = malloc(BUF_SIZE(n)*sizeof(uint32_t));
 	}
-	#pragma omp parallel for shared(done)
+	#pragma omp parallel for
 	for (int i = 0; i < n; i++) {
 		int thread_id = omp_get_thread_num();
 		p4ndec32(A.sa[i], n, row_A[thread_id]);
 		for (int j = 0; j < n; j++) {
 			if (i != j && row_A[thread_id][j] != 1) {
-				done = 0;
+				thread_done[thread_id] = 0;
 			}
 		}
+	}
+	int done = 1;
+	for (int i = 0; i < num_threads; i++) {
+		if (thread_done[i] == 0)
+			done = 0;
 	}
 	printf("done checking A\n");
 	// the array is all ones. We can just return it.
