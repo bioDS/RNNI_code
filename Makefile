@@ -1,4 +1,4 @@
-CC? = gcc
+CC = gcc-11
 
 all: TurboPFor/vp4d.o seidel 
 
@@ -9,7 +9,7 @@ seidel_test:
 	${CC} -g test_seidel.c -o  test_seidel libseidel.so -lm
 
 TurboPFor/vp4d.o:
-	CFLAGS=-fPIC make -C TurboPFor vp4d.o vp4c.o bitunpack.o bitpack.o bitutil.o vint.o bitunpack_sse.o
+	CFLAGS=-fPIC CC=gcc-11 make -C TurboPFor vp4d.o vp4c.o bitunpack.o bitpack.o bitutil.o vint.o bitunpack_sse.o
 
 clean:
 	find . -type f -name libseidel.o -delete -or -name test_seidel -delete
